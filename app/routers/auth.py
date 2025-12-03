@@ -1,0 +1,45 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.database.session import get_db
+from app.schemas.user import UserLogin, TokenOut, TokenRefreshIn
+from app.repositories.user_repository import UserRepository
+from app.auth.password import verify_password, get_password_hash
+from app.auth.jwt import create_access_token
+from app.models.refresh_token import RefreshToken
+from app.models.user import User
+from datetime import datetime, timedelta
+import secrets
+
+router = APIRouter()
+
+@router.post("/login", response_model=TokenOut)
+def login(user_in: UserLogin, db: Session = Depends(get_db)):
+    user_repo = UserRepository(db)
+    user = user_repo.get_by_email(user_in.email)
+    if not user or not verify_password(user_in.password, user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    role_names = [r.name for r in user.roles]
+    access_token = create_access_token(user.email, role_names)
+    # create refresh token
+    refresh = secrets.token_urlsafe(32)
+    expires = datetime.utcnow() + timedelta(days=7)
+    rt = RefreshToken(token=refresh, user_id=user.id, expires_at=expires)
+    db.add(rt); db.commit()
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh}
+
+@router.post("/refresh")
+def refresh_token(body: TokenRefreshIn, db: Session = Depends(get_db)):
+    rt = db.query(RefreshToken).filter(RefreshToken.token == body.refresh_token).first()
+    if not rt or rt.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    user = db.query(User).filter(User.id == rt.user_id).first()
+    roles = [r.name for r in user.roles]
+    access_token = create_access_token(user.email, roles)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/logout")
+def logout(body: TokenRefreshIn, db: Session = Depends(get_db)):
+    rt = db.query(RefreshToken).filter(RefreshToken.token == body.refresh_token).first()
+    if rt:
+        db.delete(rt); db.commit()
+    return {"ok": True}
