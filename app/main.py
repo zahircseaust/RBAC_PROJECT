@@ -4,6 +4,7 @@ from app.database.session import engine
 from app.routers import auth, users, protected, sbus_router
 # Ensure all models are imported so SQLAlchemy discovers them
 from app.models import User, Role, Permission, RefreshToken
+from app.models.sbus import SBU
 
 app = FastAPI(title="BTI-Backend")
 
