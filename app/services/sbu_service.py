@@ -4,8 +4,8 @@ from app.schemas.sbu import SBUCreate, SBUUpdate
 
 class SBUService:
 
-    def list(self, db: Session):
-        return sbu_repo.get_all(db)
+    def list(self, db: Session, page: int = 1, page_size: int = 10, search: str = None):
+        return sbu_repo.get_all(db, page, page_size, search)
 
     def get(self, db: Session, sbu_id: int):
         return sbu_repo.get_by_id(db, sbu_id)

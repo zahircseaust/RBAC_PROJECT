@@ -5,8 +5,8 @@ from app.schemas.stage import StageCreate, StageUpdate
 
 class StageService:
 
-    def list(self, db: Session):
-        return stage_repo.get_all(db)
+    def list(self, db: Session, page: int = 1, page_size: int = 10, search: str = None):
+        return stage_repo.get_all(db, page, page_size, search)
 
     def get(self, db: Session, stage_id: int):
         return stage_repo.get_by_id(db, stage_id)

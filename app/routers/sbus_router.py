@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database.session import get_db
-from app.schemas.sbu import SBUCreate, SBUUpdate, SBUOut
+from app.schemas.sbu import SBUCreate, SBUUpdate, SBUOut, SBUPaginatedResponse
 from app.services.sbu_service import sbu_service
 from app.auth.permission_checker import require_permission
 
@@ -12,15 +13,20 @@ router = APIRouter(
 
 
 # -----------------------------
-# LIST SBUs
+# LIST SBUs (with pagination & search)
 # -----------------------------
 @router.get(
     "/",
-    response_model=list[SBUOut],
+    response_model=SBUPaginatedResponse,
     dependencies=[Depends(require_permission("sbus.read"))]
 )
-def list_sbus(db: Session = Depends(get_db)):
-    return sbu_service.list(db)
+def list_sbus(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    search: Optional[str] = Query(None, description="Search by name or description"),
+    db: Session = Depends(get_db)
+):
+    return sbu_service.list(db, page, page_size, search)
 
 
 # -----------------------------

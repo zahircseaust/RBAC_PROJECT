@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 
 class StageBase(BaseModel):
@@ -22,6 +22,17 @@ class StageUpdate(BaseModel):
 
 class StageOut(StageBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+
+class StagePaginatedResponse(BaseModel):
+    items: List[StageOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
     class Config:
         from_attributes = True

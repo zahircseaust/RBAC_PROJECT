@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database.session import get_db
-from app.schemas.stage import StageCreate, StageUpdate, StageOut
+from app.schemas.stage import StageCreate, StageUpdate, StageOut, StagePaginatedResponse
 from app.services.stage_service import stage_service
 from app.auth.permission_checker import require_permission
 
@@ -12,15 +13,20 @@ router = APIRouter(
 
 
 # -----------------------------
-# LIST STAGES
+# LIST STAGES (with pagination & search)
 # -----------------------------
 @router.get(
     "/",
-    response_model=list[StageOut],
+    response_model=StagePaginatedResponse,
     dependencies=[Depends(require_permission("stages.read"))]
 )
-def list_stages(db: Session = Depends(get_db)):
-    return stage_service.list(db)
+def list_stages(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Items per page"),
+    search: Optional[str] = Query(None, description="Search by name or description"),
+    db: Session = Depends(get_db)
+):
+    return stage_service.list(db, page, page_size, search)
 
 
 # -----------------------------
