@@ -26,7 +26,8 @@ def seed():
         perms = [
             'users.create', 'users.read', 'users.update', 'users.delete',
             'roles.manage',
-            'sbus.create', 'sbus.read', 'sbus.update', 'sbus.delete'
+            'sbus.create', 'sbus.read', 'sbus.update', 'sbus.delete',
+            'stages.create', 'stages.read', 'stages.update', 'stages.delete'
         ]
         for pname in perms:
             p = db.query(Permission).filter(Permission.name==pname).first()
