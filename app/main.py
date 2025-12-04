@@ -5,7 +5,7 @@ from app.routers import auth, users, protected
 # Ensure all models are imported so SQLAlchemy discovers them
 from app.models import User, Role, Permission, RefreshToken
 
-app = FastAPI(title="RBAC FastAPI (JWT + Refresh)")
+app = FastAPI(title="BTI-Backend")
 
 @app.on_event("startup")
 def startup():
