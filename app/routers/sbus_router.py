@@ -7,7 +7,6 @@ from app.services.sbu_service import sbu_service
 from app.auth.permission_checker import require_permission
 
 router = APIRouter(
-    prefix="/sbus",
     tags=["SBUs"]
 )
 

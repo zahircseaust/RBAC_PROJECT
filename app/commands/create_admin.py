@@ -23,7 +23,11 @@ def seed():
             viewer = Role(name='viewer'); db.add(viewer)
         db.commit()
 
-        perms = ['users.create','users.read','users.update','users.delete','roles.manage']
+        perms = [
+            'users.create', 'users.read', 'users.update', 'users.delete',
+            'roles.manage',
+            'sbus.create', 'sbus.read', 'sbus.update', 'sbus.delete'
+        ]
         for pname in perms:
             p = db.query(Permission).filter(Permission.name==pname).first()
             if not p:
