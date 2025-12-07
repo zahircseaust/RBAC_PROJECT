@@ -2,12 +2,16 @@ from fastapi import FastAPI
 from app.database.base import Base
 from app.database.session import engine
 from app.routers import auth, users, protected, sbus_router, stage_router
+from app.exceptions.handlers import register_exception_handlers
 # Ensure all models are imported so SQLAlchemy discovers them
 from app.models import User, Role, Permission, RefreshToken
 from app.models.sbus import SBU
 from app.models.stage import Stage
 
 app = FastAPI(title="BTI-Backend")
+
+# Register global exception handlers
+register_exception_handlers(app)
 
 @app.on_event("startup")
 def startup():

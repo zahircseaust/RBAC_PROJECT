@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -38,13 +38,7 @@ def list_stages(
     dependencies=[Depends(require_permission("stages.read"))]
 )
 def get_stage(stage_id: int, db: Session = Depends(get_db)):
-    stage = stage_service.get(db, stage_id)
-    if not stage:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Stage not found"
-        )
-    return stage
+    return stage_service.get(db, stage_id)
 
 
 # -----------------------------
@@ -69,13 +63,7 @@ def create_stage(data: StageCreate, db: Session = Depends(get_db)):
     dependencies=[Depends(require_permission("stages.update"))]
 )
 def update_stage(stage_id: int, data: StageUpdate, db: Session = Depends(get_db)):
-    updated = stage_service.update(db, stage_id, data)
-    if not updated:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Stage not found"
-        )
-    return updated
+    return stage_service.update(db, stage_id, data)
 
 
 # -----------------------------
@@ -87,10 +75,5 @@ def update_stage(stage_id: int, data: StageUpdate, db: Session = Depends(get_db)
     dependencies=[Depends(require_permission("stages.delete"))]
 )
 def delete_stage(stage_id: int, db: Session = Depends(get_db)):
-    ok = stage_service.delete(db, stage_id)
-    if not ok:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Stage not found"
-        )
+    stage_service.delete(db, stage_id)
     return None

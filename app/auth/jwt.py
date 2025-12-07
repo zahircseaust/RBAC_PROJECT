@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from app.auth.http_bearer_auth import verify_bearer_token
 from jose import jwt, JWTError
 from app.config.settings import settings
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.models.user import User
-from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
+from app.exceptions import UnauthorizedException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 
 bearer_scheme = HTTPBearer()
@@ -20,8 +20,8 @@ def decode_token(token: str):
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         return payload
-    except JWTError as e:
-        raise
+    except JWTError:
+        raise UnauthorizedException(message="Invalid token")
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -32,11 +32,11 @@ def get_current_user(
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise UnauthorizedException(message="Invalid token payload")
 
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+            raise UnauthorizedException(message="User not found")
         return user
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise UnauthorizedException(message="Invalid or expired token")

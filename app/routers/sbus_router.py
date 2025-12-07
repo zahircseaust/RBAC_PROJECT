@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -38,13 +38,7 @@ def list_sbus(
     dependencies=[Depends(require_permission("sbus.read"))]
 )
 def get_sbu(sbu_id: int, db: Session = Depends(get_db)):
-    sbu = sbu_service.get(db, sbu_id)
-    if not sbu:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="SBU not found"
-        )
-    return sbu
+    return sbu_service.get(db, sbu_id)
 
 
 # -----------------------------
@@ -69,13 +63,7 @@ def create_sbu(data: SBUCreate, db: Session = Depends(get_db)):
     dependencies=[Depends(require_permission("sbus.update"))]
 )
 def update_sbu(sbu_id: int, data: SBUUpdate, db: Session = Depends(get_db)):
-    updated = sbu_service.update(db, sbu_id, data)
-    if not updated:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="SBU not found"
-        )
-    return updated
+    return sbu_service.update(db, sbu_id, data)
 
 
 # -----------------------------
@@ -87,10 +75,5 @@ def update_sbu(sbu_id: int, data: SBUUpdate, db: Session = Depends(get_db)):
     dependencies=[Depends(require_permission("sbus.delete"))]
 )
 def delete_sbu(sbu_id: int, db: Session = Depends(get_db)):
-    ok = sbu_service.delete(db, sbu_id)
-    if not ok:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="SBU not found"
-        )
-    return {"message": "SBU deleted"}
+    sbu_service.delete(db, sbu_id)
+    return None

@@ -1,16 +1,23 @@
-from passlib.context import CryptContext
+import bcrypt
 import hashlib
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
+    """Hash a password using bcrypt."""
     # If password is longer than 72 bytes, hash it with SHA-256 first
-    if len(password.encode("utf-8")) > 72:
-        password = hashlib.sha256(password.encode("utf-8")).hexdigest()
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = hashlib.sha256(password_bytes).hexdigest().encode("utf-8")
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against a hash."""
     # Apply same logic for verification
-    if len(plain_password.encode("utf-8")) > 72:
-        plain_password = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
-    return pwd_context.verify(plain_password, hashed_password)
+    password_bytes = plain_password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = hashlib.sha256(password_bytes).hexdigest().encode("utf-8")
+    try:
+        return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
+    except Exception:
+        return False

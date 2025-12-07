@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.schemas.user import UserLogin, TokenOut, TokenRefreshIn
 from app.repositories.user_repository import UserRepository
-from app.auth.password import verify_password, get_password_hash
+from app.auth.password import verify_password
 from app.auth.jwt import create_access_token
-from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.repositories.refresh_token_repository import RefreshTokenRepository
+from app.exceptions import UnauthorizedException
 from datetime import datetime, timedelta
 import secrets
 
@@ -19,7 +19,7 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
     refresh_repo = RefreshTokenRepository(db)
     user = user_repo.get_by_email(user_in.email)
     if not user or not verify_password(user_in.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise UnauthorizedException(message="Invalid credentials")
     role_names = [r.name for r in user.roles]
     access_token = create_access_token(user.email, role_names)
     # create refresh token
@@ -33,7 +33,7 @@ def refresh_token(body: TokenRefreshIn, db: Session = Depends(get_db)):
     refresh_repo = RefreshTokenRepository(db)
     rt = refresh_repo.get_by_token(body.refresh_token)
     if not rt or rt.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise UnauthorizedException(message="Invalid or expired refresh token")
     user = db.query(User).filter(User.id == rt.user_id).first()
     roles = [r.name for r in user.roles]
     access_token = create_access_token(user.email, roles)

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.repositories.sbu_repository import sbu_repo
 from app.schemas.sbu import SBUCreate, SBUUpdate
+from app.exceptions import NotFoundException
 
 class SBUService:
 
@@ -8,7 +9,10 @@ class SBUService:
         return sbu_repo.get_all(db, page, page_size, search)
 
     def get(self, db: Session, sbu_id: int):
-        return sbu_repo.get_by_id(db, sbu_id)
+        sbu = sbu_repo.get_by_id(db, sbu_id)
+        if not sbu:
+            raise NotFoundException(resource="SBU", resource_id=sbu_id)
+        return sbu
 
     def create(self, db: Session, data: SBUCreate):
         return sbu_repo.create(db, data)
@@ -16,10 +20,13 @@ class SBUService:
     def update(self, db: Session, sbu_id: int, data: SBUUpdate):
         sbu = sbu_repo.get_by_id(db, sbu_id)
         if not sbu:
-            return None
+            raise NotFoundException(resource="SBU", resource_id=sbu_id)
         return sbu_repo.update(db, sbu, data)
 
     def delete(self, db: Session, sbu_id: int):
+        sbu = sbu_repo.get_by_id(db, sbu_id)
+        if not sbu:
+            raise NotFoundException(resource="SBU", resource_id=sbu_id)
         return sbu_repo.delete(db, sbu_id)
 
 sbu_service = SBUService()
